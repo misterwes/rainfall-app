@@ -1,0 +1,263 @@
+:root {
+  --bg: #f4efe6;
+  --panel: rgba(255, 252, 246, 0.84);
+  --card: rgba(255, 255, 255, 0.72);
+  --text: #1f2f31;
+  --muted: #5f706e;
+  --accent: #0f7d88;
+  --accent-dark: #0b5560;
+  --border: rgba(31, 47, 49, 0.1);
+  --shadow: 0 20px 60px rgba(34, 53, 56, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Work Sans", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(15, 125, 136, 0.18), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(227, 164, 78, 0.18), transparent 30%),
+    linear-gradient(180deg, #efe7d8 0%, var(--bg) 100%);
+}
+
+.page-shell {
+  width: min(960px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 3rem 0 4rem;
+}
+
+.hero {
+  margin-bottom: 2rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent-dark);
+}
+
+.hero h1 {
+  margin: 0;
+  font-family: "Newsreader", serif;
+  font-size: clamp(2.6rem, 6vw, 4.8rem);
+  line-height: 0.95;
+  max-width: 10ch;
+}
+
+.intro {
+  max-width: 42rem;
+  font-size: 1.06rem;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.lookup-panel {
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+}
+
+.panel-header h2,
+.panel-header p {
+  margin: 0;
+}
+
+.panel-header h2 {
+  font-size: 1.15rem;
+}
+
+.panel-header p {
+  margin-top: 0.45rem;
+  color: var(--muted);
+}
+
+.zip-form {
+  display: flex;
+  gap: 0.85rem;
+  margin-top: 1.4rem;
+}
+
+.zip-form input,
+.zip-form button {
+  min-height: 3.4rem;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  font: inherit;
+}
+
+.zip-form input {
+  flex: 1;
+  padding: 0 1rem;
+  font-size: 1.05rem;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(31, 47, 49, 0.12);
+}
+
+.zip-form input:focus {
+  outline: 2px solid rgba(15, 125, 136, 0.25);
+  border-color: var(--accent);
+}
+
+.zip-form button {
+  padding: 0 1.4rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  cursor: pointer;
+}
+
+.zip-form button:hover {
+  filter: brightness(1.04);
+}
+
+.help-text,
+.status-text,
+.error-text {
+  margin-bottom: 0;
+  font-size: 0.94rem;
+}
+
+.help-text,
+.status-text {
+  color: var(--muted);
+}
+
+.error-text {
+  color: #9a3224;
+}
+
+.results {
+  margin-top: 1.75rem;
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1rem;
+}
+
+.stat-card {
+  grid-column: span 4;
+  min-height: 11rem;
+  padding: 1.15rem;
+  border: 1px solid rgba(31, 47, 49, 0.08);
+  border-radius: 22px;
+  background: var(--card);
+}
+
+.stat-card-featured {
+  grid-column: span 8;
+  background:
+    linear-gradient(145deg, rgba(15, 125, 136, 0.12), rgba(255, 255, 255, 0.88)),
+    var(--card);
+}
+
+.stat-label,
+.stat-note {
+  margin: 0;
+}
+
+.stat-label {
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+
+.stat-value {
+  margin: 0.6rem 0 0.35rem;
+  font-family: "Newsreader", serif;
+  font-size: clamp(2.1rem, 5vw, 3.5rem);
+  line-height: 1;
+}
+
+.stat-note {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.source-card {
+  margin-top: 1rem;
+  padding: 1.15rem;
+  border: 1px solid rgba(31, 47, 49, 0.08);
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(15, 125, 136, 0.08), rgba(255, 255, 255, 0.78)),
+    var(--card);
+}
+
+.source-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.source-header h3,
+.source-name,
+.source-note,
+.source-meta {
+  margin: 0;
+}
+
+.source-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.source-name {
+  margin-top: 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.source-note,
+.source-meta {
+  margin-top: 0.35rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 720px) {
+  .page-shell {
+    width: min(100% - 1rem, 960px);
+    padding-top: 1.5rem;
+  }
+
+  .lookup-panel {
+    padding: 1rem;
+    border-radius: 22px;
+  }
+
+  .zip-form {
+    flex-direction: column;
+  }
+
+  .stat-card,
+  .stat-card-featured {
+    grid-column: span 12;
+    min-height: auto;
+  }
+}

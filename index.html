@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rainfall Lookup</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='24' fill='%230f7d88'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:wght@500;700&family=Work+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="hero">
+        <p class="eyebrow">Rainfall history</p>
+        <h1>Check recent rain by ZIP Code.</h1>
+        <p class="intro">
+          Enter a U.S. ZIP Code to see how long it has been since measurable rain
+          and how much rain has fallen in the last 30, 60, and 90 days.
+        </p>
+      </section>
+
+      <section class="lookup-panel" aria-labelledby="lookup-title">
+        <div class="panel-header">
+          <h2 id="lookup-title">ZIP lookup</h2>
+          <p>Designed as a simple frontend with a replaceable data layer.</p>
+        </div>
+
+        <form id="zip-form" class="zip-form" novalidate>
+          <label for="zip-input" class="sr-only">ZIP Code</label>
+          <input
+            id="zip-input"
+            name="zip"
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]{5}"
+            maxlength="5"
+            placeholder="e.g. 60601"
+            autocomplete="postal-code"
+            aria-describedby="zip-help zip-error"
+          />
+          <button type="submit">Get rainfall</button>
+        </form>
+
+        <p id="zip-help" class="help-text">Use any 5-digit U.S. ZIP Code.</p>
+        <p id="zip-error" class="error-text" role="alert" hidden></p>
+        <p id="status" class="status-text" aria-live="polite"></p>
+
+        <section id="results" class="results" hidden aria-live="polite">
+          <div class="result-grid">
+            <article class="stat-card stat-card-featured">
+              <p class="stat-label">Days since rain</p>
+              <p class="stat-value" id="days-since-rain">-</p>
+              <p class="stat-note" id="last-rain-date">-</p>
+            </article>
+
+            <article class="stat-card">
+              <p class="stat-label">Rain in last rain event</p>
+              <p class="stat-value" id="last-rain-amount">-</p>
+              <p class="stat-note">Most recent measurable rainfall</p>
+            </article>
+
+            <article class="stat-card">
+              <p class="stat-label">Rain in last 30 days</p>
+              <p class="stat-value" id="rain-30">-</p>
+              <p class="stat-note">Rolling total</p>
+            </article>
+
+            <article class="stat-card">
+              <p class="stat-label">Rain in last 60 days</p>
+              <p class="stat-value" id="rain-60">-</p>
+              <p class="stat-note">Rolling total</p>
+            </article>
+
+            <article class="stat-card">
+              <p class="stat-label">Rain in last 90 days</p>
+              <p class="stat-value" id="rain-90">-</p>
+              <p class="stat-note">Rolling total</p>
+            </article>
+          </div>
+
+          <article class="source-card" aria-labelledby="source-title">
+            <div class="source-header">
+              <p class="stat-label">Source</p>
+              <h3 id="source-title">Where this information came from</h3>
+            </div>
+            <p class="source-name" id="source-name">-</p>
+            <p class="source-note" id="source-note">-</p>
+            <p class="source-meta" id="source-meta">-</p>
+          </article>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
