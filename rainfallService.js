@@ -2,6 +2,9 @@ const GEOCODING_API_URL = "https://geocoding-api.open-meteo.com/v1/search";
 const HISTORICAL_API_URL = "https://archive-api.open-meteo.com/v1/archive";
 const MEASURABLE_RAIN_THRESHOLD_INCHES = 0.01;
 
+/** Days of daily precipitation requested from Open-Meteo (totals and “days since rain” use only this window). */
+export const RAIN_HISTORY_DAY_COUNT = 21;
+
 function toIsoDate(date) {
   return date.toISOString().slice(0, 10);
 }
@@ -53,7 +56,7 @@ async function geocodeZipCode(zipCode) {
 }
 
 async function fetchRainHistory(location) {
-  const { startDate, endDate } = getDateRange(90);
+  const { startDate, endDate } = getDateRange(RAIN_HISTORY_DAY_COUNT);
   const params = new URLSearchParams({
     latitude: String(location.latitude),
     longitude: String(location.longitude),

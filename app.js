@@ -2,6 +2,7 @@ import {
   getRainfallSummaryByCoordinates,
   getRainfallSummaryByZip,
   parseCoordinates,
+  RAIN_HISTORY_DAY_COUNT,
 } from "./rainfallService.js";
 
 const zipForm = document.querySelector("#zip-form");
@@ -133,8 +134,8 @@ function renderResults(summary) {
   };
 
   if (!summary.lastRainEvent) {
-    daysSinceRain.textContent = "90+";
-    lastRainDate.textContent = "No measurable rain found in the available history.";
+    daysSinceRain.textContent = `${RAIN_HISTORY_DAY_COUNT}+`;
+    lastRainDate.textContent = `No measurable rain found in the last ${RAIN_HISTORY_DAY_COUNT} days.`;
     lastRainAmount.textContent = "0.00 in";
   } else {
     daysSinceRain.textContent = String(summary.lastRainEvent.daysSince);

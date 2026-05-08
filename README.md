@@ -7,10 +7,10 @@ Minimal single-page website for looking up recent rainfall by **U.S. ZIP Code** 
 
 - Accepts a 5-digit U.S. ZIP Code **or** pasted coordinates (decimal latitude/longitude or a common maps link format)
 - Resolves the ZIP Code to a latitude/longitude point (coordinates skip this step)
-- Fetches live daily precipitation history for the last 90 days
-- Shows days since the most recent measurable rain
+- Fetches live daily precipitation history for the last **21 days** (single Open-Meteo request covers totals and “days since rain”)
+- Shows days since the most recent measurable rain within that window (or “21+” if none)
 - Shows rainfall in the most recent rain event
-- Shows rainfall totals for the last 7, 14, and 21 days (history still spans 90 days for “days since rain”)
+- Shows rainfall totals for the last 7, 14, and 21 days
 - Displays the source of the data shown
 
 Coordinate parsing (maps URLs and `lat, lon` pairs) lives alongside the API calls in [`rainfallService.js`](rainfallService.js).
