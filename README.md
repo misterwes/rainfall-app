@@ -1,6 +1,7 @@
 # Rainfall Lookup
 
 Minimal single-page website for looking up recent rainfall by **U.S. ZIP Code** or by **map coordinates**.
+(See it live [here](https://misterwes.github.io/rainfall-app/).)
 
 ## What it does
 
