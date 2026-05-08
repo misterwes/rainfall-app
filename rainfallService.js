@@ -67,15 +67,79 @@ async function fetchRainHistory(location) {
   const data = await fetchJson(`${HISTORICAL_API_URL}?${params.toString()}`);
   const dates = data.daily?.time ?? [];
   const totals = data.daily?.precipitation_sum ?? [];
+  const resolvedTimezone =
+    typeof data.timezone === "string" && data.timezone.length > 0
+      ? data.timezone
+      : location.timezone;
 
   if (!dates.length || dates.length !== totals.length) {
     throw new Error("Rainfall history was incomplete.");
   }
 
-  return dates.map((date, index) => ({
+  const history = dates.map((date, index) => ({
     date,
     rainfallInches: Number((totals[index] ?? 0).toFixed(2)),
   }));
+
+  return { history, timezone: resolvedTimezone };
+}
+
+function normalizeLatLonPair(first, second) {
+  const validLat = (value) => Number.isFinite(value) && Math.abs(value) <= 90;
+  const validLon = (value) => Number.isFinite(value) && Math.abs(value) <= 180;
+
+  if (validLat(first) && validLon(second)) {
+    return { latitude: first, longitude: second };
+  }
+
+  if (validLat(second) && validLon(first)) {
+    return { latitude: second, longitude: first };
+  }
+
+  return null;
+}
+
+/** Parse lat/lon from a Google Maps URL or pasted decimal pair. */
+export function parseCoordinates(raw) {
+  const text = String(raw ?? "").trim();
+  if (!text) {
+    return null;
+  }
+
+  const urlPatterns = [
+    /@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/,
+    /[?&]ll=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/i,
+    /[?&]q=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/i,
+    /\/place\/[^/]+\/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/,
+    /loc:\s*(-?\d+(?:\.\d+)?)[+,]\s*(-?\d+(?:\.\d+)?)/i,
+  ];
+
+  for (const pattern of urlPatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      const pair = normalizeLatLonPair(Number(match[1]), Number(match[2]));
+      if (pair) {
+        return pair;
+      }
+    }
+  }
+
+  const loosePair = text.match(
+    /(-?\d+(?:\.\d+)?)\s*[,]\s*(-?\d+(?:\.\d+)?)/,
+  );
+  if (loosePair) {
+    const pair = normalizeLatLonPair(Number(loosePair[1]), Number(loosePair[2]));
+    if (pair) {
+      return pair;
+    }
+  }
+
+  const numbers = text.match(/-?\d+(?:\.\d+)?/g);
+  if (numbers && numbers.length >= 2) {
+    return normalizeLatLonPair(Number(numbers[0]), Number(numbers[1]));
+  }
+
+  return null;
 }
 
 function sumRain(history, numberOfDays) {
@@ -117,12 +181,18 @@ function daysBetween(dateString, timeZone) {
   return Math.round((todayUtc - targetUtc) / msPerDay);
 }
 
+function timezoneForCalendar(resolvedTimezone) {
+  return resolvedTimezone === "auto" ? "UTC" : resolvedTimezone;
+}
+
 export async function getRainfallSummaryByZip(zipCode) {
   const location = await geocodeZipCode(zipCode);
-  const history = await fetchRainHistory(location);
+  const { history, timezone } = await fetchRainHistory(location);
+  const calendarTz = timezoneForCalendar(timezone);
   const mostRecentRain = getMostRecentRain(history);
 
   return {
+    lookupMode: "zip",
     zipCode,
     generatedAt: new Date().toISOString(),
     location: {
@@ -141,13 +211,54 @@ export async function getRainfallSummaryByZip(zipCode) {
       ? {
           date: mostRecentRain.date,
           amountInches: mostRecentRain.rainfallInches,
-          daysSince: daysBetween(mostRecentRain.date, location.timezone),
+          daysSince: daysBetween(mostRecentRain.date, calendarTz),
         }
       : null,
     totals: {
-      last30DaysInches: sumRain(history, 30),
-      last60DaysInches: sumRain(history, 60),
-      last90DaysInches: sumRain(history, 90),
+      last7DaysInches: sumRain(history, 7),
+      last14DaysInches: sumRain(history, 14),
+      last21DaysInches: sumRain(history, 21),
+    },
+  };
+}
+
+export async function getRainfallSummaryByCoordinates(latitude, longitude) {
+  const location = {
+    latitude,
+    longitude,
+    timezone: "auto",
+  };
+  const { history, timezone } = await fetchRainHistory(location);
+  const calendarTz = timezoneForCalendar(timezone);
+  const mostRecentRain = getMostRecentRain(history);
+
+  return {
+    lookupMode: "coordinates",
+    zipCode: null,
+    generatedAt: new Date().toISOString(),
+    location: {
+      name: null,
+      admin1: null,
+      latitude,
+      longitude,
+    },
+    source: {
+      name: "Open-Meteo Historical Weather API",
+      description:
+        "Daily precipitation is fetched from Open-Meteo historical weather data at the latitude and longitude you provided (for example from a maps pin).",
+      coverage: "Reanalysis-based precipitation history at your coordinates",
+    },
+    lastRainEvent: mostRecentRain
+      ? {
+          date: mostRecentRain.date,
+          amountInches: mostRecentRain.rainfallInches,
+          daysSince: daysBetween(mostRecentRain.date, calendarTz),
+        }
+      : null,
+    totals: {
+      last7DaysInches: sumRain(history, 7),
+      last14DaysInches: sumRain(history, 14),
+      last21DaysInches: sumRain(history, 21),
     },
   };
 }

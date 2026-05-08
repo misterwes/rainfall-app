@@ -1,17 +1,25 @@
-import { getRainfallSummaryByZip } from "./rainfallService.js";
+import {
+  getRainfallSummaryByCoordinates,
+  getRainfallSummaryByZip,
+  parseCoordinates,
+} from "./rainfallService.js";
 
 const zipForm = document.querySelector("#zip-form");
+const coordForm = document.querySelector("#coord-form");
 const zipInput = document.querySelector("#zip-input");
+const coordInput = document.querySelector("#coord-input");
+const modeRadios = document.querySelectorAll('input[name="lookup-mode"]');
+const modeHelps = document.querySelectorAll(".mode-help");
 const statusText = document.querySelector("#status");
-const errorText = document.querySelector("#zip-error");
+const errorText = document.querySelector("#lookup-error");
 const results = document.querySelector("#results");
 
 const daysSinceRain = document.querySelector("#days-since-rain");
 const lastRainDate = document.querySelector("#last-rain-date");
 const lastRainAmount = document.querySelector("#last-rain-amount");
-const rain30 = document.querySelector("#rain-30");
-const rain60 = document.querySelector("#rain-60");
-const rain90 = document.querySelector("#rain-90");
+const rain7 = document.querySelector("#rain-7");
+const rain14 = document.querySelector("#rain-14");
+const rain21 = document.querySelector("#rain-21");
 const sourceName = document.querySelector("#source-name");
 const sourceNote = document.querySelector("#source-note");
 const sourceMeta = document.querySelector("#source-meta");
@@ -47,10 +55,28 @@ function formatTimestamp(dateString) {
   }).format(new Date(dateString));
 }
 
+function getLookupMode() {
+  const selected = document.querySelector('input[name="lookup-mode"]:checked');
+  return selected?.value === "coordinates" ? "coordinates" : "zip";
+}
+
+function setLookupMode(mode) {
+  const isZip = mode !== "coordinates";
+  for (const radio of modeRadios) {
+    radio.checked = radio.value === (isZip ? "zip" : "coordinates");
+  }
+  zipForm.hidden = !isZip;
+  coordForm.hidden = isZip;
+  for (const el of modeHelps) {
+    el.hidden = el.dataset.modeHelp !== (isZip ? "zip" : "coordinates");
+  }
+}
+
 function setLoadingState(isLoading) {
-  const submitButton = zipForm.querySelector("button");
-  submitButton.disabled = isLoading;
-  submitButton.textContent = isLoading ? "Loading..." : "Get rainfall";
+  for (const button of document.querySelectorAll(".lookup-submit")) {
+    button.disabled = isLoading;
+    button.textContent = isLoading ? "Loading..." : "Get rainfall";
+  }
 }
 
 function setError(message = "") {
@@ -58,14 +84,45 @@ function setError(message = "") {
   errorText.hidden = !message;
 }
 
+function formatCoordinateLocation(latitude, longitude) {
+  return `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+}
+
 function formatLocation(summary) {
-  if (!summary.location?.name) {
-    return "";
+  if (summary.location?.name) {
+    return summary.location.admin1
+      ? `${summary.location.name}, ${summary.location.admin1}`
+      : summary.location.name;
   }
 
-  return summary.location.admin1
-    ? `${summary.location.name}, ${summary.location.admin1}`
-    : summary.location.name;
+  if (
+    summary.location &&
+    typeof summary.location.latitude === "number" &&
+    typeof summary.location.longitude === "number"
+  ) {
+    return formatCoordinateLocation(
+      summary.location.latitude,
+      summary.location.longitude,
+    );
+  }
+
+  return "";
+}
+
+function setUrlForZip(zipCode) {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("lat");
+  url.searchParams.delete("lon");
+  url.searchParams.set("zip", zipCode);
+  window.history.replaceState({}, "", url);
+}
+
+function setUrlForCoordinates(latitude, longitude) {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("zip");
+  url.searchParams.set("lat", latitude.toFixed(6));
+  url.searchParams.set("lon", longitude.toFixed(6));
+  window.history.replaceState({}, "", url);
 }
 
 function renderResults(summary) {
@@ -85,19 +142,20 @@ function renderResults(summary) {
     lastRainAmount.textContent = formatRainfall(summary.lastRainEvent.amountInches);
   }
 
-  rain30.textContent = formatRainfall(summary.totals.last30DaysInches);
-  rain60.textContent = formatRainfall(summary.totals.last60DaysInches);
-  rain90.textContent = formatRainfall(summary.totals.last90DaysInches);
+  rain7.textContent = formatRainfall(summary.totals.last7DaysInches);
+  rain14.textContent = formatRainfall(summary.totals.last14DaysInches);
+  rain21.textContent = formatRainfall(summary.totals.last21DaysInches);
   sourceName.textContent = source.name;
-  sourceNote.textContent = formatLocation(summary)
-    ? `${source.description} Location: ${formatLocation(summary)}.`
+  const locationLine = formatLocation(summary);
+  sourceNote.textContent = locationLine
+    ? `${source.description} Location: ${locationLine}.`
     : source.description;
   sourceMeta.textContent = `Coverage: ${source.coverage}. Updated: ${formatTimestamp(summary.generatedAt)}.`;
 
   results.hidden = false;
 }
 
-async function loadSummary(zipCode, options = {}) {
+async function loadSummaryByZip(zipCode, options = {}) {
   const { updateUrl = true } = options;
 
   setError("");
@@ -110,9 +168,7 @@ async function loadSummary(zipCode, options = {}) {
   }
 
   if (updateUrl) {
-    const url = new URL(window.location.href);
-    url.searchParams.set("zip", zipCode);
-    window.history.replaceState({}, "", url);
+    setUrlForZip(zipCode);
   }
 
   setLoadingState(true);
@@ -121,7 +177,34 @@ async function loadSummary(zipCode, options = {}) {
   try {
     const summary = await getRainfallSummaryByZip(zipCode);
     renderResults(summary);
-    statusText.textContent = `Showing rainfall summary for ${summary.zipCode}.`;
+    statusText.textContent = `Showing rainfall summary for ZIP ${summary.zipCode}.`;
+  } catch (error) {
+    results.hidden = true;
+    setError("Unable to load rainfall data right now.");
+    statusText.textContent = "";
+    console.error(error);
+  } finally {
+    setLoadingState(false);
+  }
+}
+
+async function loadSummaryByCoordinates(latitude, longitude, options = {}) {
+  const { updateUrl = true } = options;
+
+  setError("");
+  statusText.textContent = "";
+
+  if (updateUrl) {
+    setUrlForCoordinates(latitude, longitude);
+  }
+
+  setLoadingState(true);
+  statusText.textContent = `Looking up rainfall data for ${formatCoordinateLocation(latitude, longitude)}...`;
+
+  try {
+    const summary = await getRainfallSummaryByCoordinates(latitude, longitude);
+    renderResults(summary);
+    statusText.textContent = `Showing rainfall summary for ${formatLocation(summary)}.`;
   } catch (error) {
     results.hidden = true;
     setError("Unable to load rainfall data right now.");
@@ -136,17 +219,57 @@ zipInput.addEventListener("input", (event) => {
   event.target.value = formatZipCode(event.target.value);
 });
 
+for (const radio of modeRadios) {
+  radio.addEventListener("change", () => {
+    setLookupMode(getLookupMode());
+    setError("");
+  });
+}
+
 zipForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const zipCode = formatZipCode(zipInput.value);
   zipInput.value = zipCode;
-  await loadSummary(zipCode);
+  await loadSummaryByZip(zipCode);
 });
 
-const zipFromUrl = formatZipCode(new URLSearchParams(window.location.search).get("zip") ?? "");
+coordForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
 
-if (zipFromUrl) {
+  const parsed = parseCoordinates(coordInput.value);
+  if (!parsed) {
+    results.hidden = true;
+    setError(
+      "Could not read coordinates. Paste a maps link or two decimal numbers (latitude, longitude).",
+    );
+    return;
+  }
+
+  coordInput.value = formatCoordinateLocation(parsed.latitude, parsed.longitude);
+  await loadSummaryByCoordinates(parsed.latitude, parsed.longitude);
+});
+
+const urlParams = new URLSearchParams(window.location.search);
+const latFromUrl = Number(urlParams.get("lat"));
+const lonFromUrl = Number(urlParams.get("lon"));
+const coordPairFromUrl = parseCoordinates(`${latFromUrl},${lonFromUrl}`);
+const zipFromUrl = formatZipCode(urlParams.get("zip") ?? "");
+
+if (
+  coordPairFromUrl &&
+  Number.isFinite(latFromUrl) &&
+  Number.isFinite(lonFromUrl)
+) {
+  setLookupMode("coordinates");
+  coordInput.value = formatCoordinateLocation(
+    coordPairFromUrl.latitude,
+    coordPairFromUrl.longitude,
+  );
+  void loadSummaryByCoordinates(coordPairFromUrl.latitude, coordPairFromUrl.longitude, {
+    updateUrl: false,
+  });
+} else if (zipFromUrl) {
   zipInput.value = zipFromUrl;
-  void loadSummary(zipFromUrl, { updateUrl: false });
+  void loadSummaryByZip(zipFromUrl, { updateUrl: false });
 }
