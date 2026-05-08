@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -20,15 +20,17 @@
     <main class="page-shell">
       <section class="hero">
         <p class="eyebrow">Rainfall history</p>
-        <h1>Check recent rain by ZIP or map pin.</h1>
+        <h3>When did it rain last?</h3>
         <p class="intro">
-          Enter a U.S. ZIP Code or paste coordinates from a maps link to see how long it has been since measurable rain
-          and how much rain has fallen in the last 7, 14, and 21 days.
+          Enter a U.S. ZIP Code or paste coordinates from a maps link to see how
+          long it has been since measurable rain and how much rain has fallen in
+          the last 7, 14, and 21 days.
         </p>
         <p class="data-context">
-          These figures come from a global weather analysis dataset—not a rain gauge next to your home. Treat them as a
-          broad estimate for the location you pick: helpful for the big picture, but not the same as measuring rain in
-          your backyard.
+          These figures come from a global weather analysis dataset—not a rain
+          gauge next to your home. Treat them as a broad estimate for the
+          location you pick: helpful for the big picture, but not the same as
+          measuring rain in your backyard.
         </p>
       </section>
 
@@ -66,7 +68,9 @@
         </form>
 
         <form id="coord-form" class="lookup-form coord-form" novalidate hidden>
-          <label for="coord-input" class="sr-only">Coordinates or maps link</label>
+          <label for="coord-input" class="sr-only"
+            >Coordinates or maps link</label
+          >
           <textarea
             id="coord-input"
             name="coordinates"
@@ -81,9 +85,15 @@
         <p id="zip-help" class="help-text mode-help" data-mode-help="zip">
           Use any 5-digit U.S. ZIP Code.
         </p>
-        <p id="coord-help" class="help-text mode-help" data-mode-help="coordinates" hidden>
-          Copy the link from your maps app or paste two decimal numbers separated by a comma. Latitude must be between -90 and 90;
-          longitude between -180 and 180.
+        <p
+          id="coord-help"
+          class="help-text mode-help"
+          data-mode-help="coordinates"
+          hidden
+        >
+          Copy the link from your maps app or paste two decimal numbers
+          separated by a comma. Latitude must be between -90 and 90; longitude
+          between -180 and 180.
         </p>
         <p id="lookup-error" class="error-text" role="alert" hidden></p>
         <p id="status" class="status-text" aria-live="polite"></p>
